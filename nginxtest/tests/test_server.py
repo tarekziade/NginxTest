@@ -14,5 +14,5 @@ class TestMyNginx(unittest2.TestCase):
         self.nginx.stop()
 
     def testHello(self):
-        resp = self.app.get('/hello')
+        resp = self.app.get('/')
         self.assertEqual(resp.status_int, 200)

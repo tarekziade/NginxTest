@@ -1,3 +1,9 @@
+import tempfile
+import shutil
+import os
+import subprocess
+import shlex
+
 from mako.template import Template
 
 
@@ -39,12 +45,26 @@ class NginxServer(object):
         for key, val in _DEFAULTS:
             if key not in options:
                 options[key] = val
-        self.nginx = options['nginx']
-        self.nginx_config = Template(_TMPL).render(**options)
+
+        # early rendering so we can stop on error
+        config = Template(_TMPL).render(**options)
+
+        self.wdir = tempfile.mkdtemp()
+        self.conf = os.path.join(self.wdir, 'nginx.conf')
+        with open(self.conf, 'w') as f:
+            f.write(config)
+
         self.root_url = 'http://localhost:%s/' % options['port']
+        self.cmd = '%s -c %s' % (options['nginx'], self.conf)
+        self.cwd = os.getcwd()
+        self._p = None
 
     def start(self):
-        pass
+        os.chdir(self.wdir)
+        self._p = subprocess.Popen(shlex.split(self.cmd))
 
     def stop(self):
-        pass
+        if self._p is not None:
+            self._p.terminate()
+        os.chdir(self.cwd)
+        shutil.rmtree(self.wdir)
