@@ -33,12 +33,12 @@ tests. The stop method kills the server.
 
 Example of usage with WebTest::
 
-    import unittest
+    import unittest2
     from webtest import TestApp
-    from nginxtest import NginxServer
+    from nginxtest.server import NginxServer
 
 
-    class TestMyNginx(unittest.TestCase):
+    class TestMyNginx(unittest2.TestCase):
 
         def setUp(self):
             self.nginx = NginxServer()
@@ -49,9 +49,9 @@ Example of usage with WebTest::
             self.nginx.stop()
 
         def testHello(self):
-            resp = self.app.get('/hello')
+            resp = self.app.get('/')
             self.assertEqual(resp.status_int, 200)
-
+            self.assertTrue('Welcome to nginx!' in resp.body)
 
 
 Limitations

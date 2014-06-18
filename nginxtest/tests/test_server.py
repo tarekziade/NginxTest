@@ -16,3 +16,4 @@ class TestMyNginx(unittest2.TestCase):
     def testHello(self):
         resp = self.app.get('/')
         self.assertEqual(resp.status_int, 200)
+        self.assertTrue('Welcome to nginx!' in resp.body)
