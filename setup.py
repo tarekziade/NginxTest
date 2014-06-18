@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from nginxtest import __version__
 import sys
 
-install_requires = ["Mako"]
+install_requires = ["Mako", "requests"]
 description = ''
 
 for file_ in ('README',):

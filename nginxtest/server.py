@@ -3,13 +3,16 @@ import shutil
 import os
 import subprocess
 import shlex
+import time
+import sys
 
 from mako.template import Template
+import requests
 
 
 _TMPL = """\
 worker_processes 1;
-error_log stderr notice;
+error_log stderr error;
 daemon off;
 events {worker_connections 1024;}
 
@@ -48,7 +51,6 @@ class NginxServer(object):
 
         # early rendering so we can stop on error
         config = Template(_TMPL).render(**options)
-
         self.wdir = tempfile.mkdtemp()
         self.conf = os.path.join(self.wdir, 'nginx.conf')
         with open(self.conf, 'w') as f:
@@ -61,10 +63,24 @@ class NginxServer(object):
 
     def start(self):
         os.chdir(self.wdir)
-        self._p = subprocess.Popen(shlex.split(self.cmd))
+        self._p = subprocess.Popen(shlex.split(self.cmd),
+                                   stderr=subprocess.PIPE,
+                                   stdout=subprocess.PIPE)
+        time.sleep(.1)
+
+        # sanity check
+        resp = requests.get(self.root_url)
+        if resp.status_code != 200:
+            self.stop()
+            sys.stdout.write(self._p.stdout.read())
+            sys.stderr.write(self._p.stderr.read())
+            raise IOError('Failed to start Nginx')
 
     def stop(self):
         if self._p is not None:
             self._p.terminate()
+
+        sys.stdout.write(self._p.stdout.read())
+        sys.stderr.write(self._p.stderr.read())
         os.chdir(self.cwd)
         shutil.rmtree(self.wdir)
