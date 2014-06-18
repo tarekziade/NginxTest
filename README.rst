@@ -43,7 +43,7 @@ Example of usage with WebTest::
         def setUp(self):
             self.nginx = NginxServer()
             self.nginx.start()
-            self.app = TestApp(self.nginx.root_location)
+            self.app = TestApp(self.nginx.root_url)
 
         def tearDown(self):
             self.nginx.stop()
