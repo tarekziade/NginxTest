@@ -1,6 +1,6 @@
 import unittest2
 from webtest import TestApp
-from nginxtest import NginxServer
+from nginxtest.server import NginxServer
 
 
 class TestMyNginx(unittest2.TestCase):
