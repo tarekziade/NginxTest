@@ -69,18 +69,31 @@ class NginxServer(object):
         time.sleep(.1)
 
         # sanity check
-        resp = requests.get(self.root_url)
-        if resp.status_code != 200:
+        start = time.time()
+        resp = None
+        while time.time() - start < 2:
+            try:
+                resp = requests.get(self.root_url)
+                break
+            except requests.ConnectionError:
+                time.sleep(.1)
+
+        if resp is None or resp.status_code != 200:
             self.stop()
             sys.stdout.write(self._p.stdout.read())
             sys.stderr.write(self._p.stderr.read())
             raise IOError('Failed to start Nginx')
 
     def stop(self):
-        if self._p is not None:
-            self._p.terminate()
+        if self._p is None:
+            return
 
-        sys.stdout.write(self._p.stdout.read())
-        sys.stderr.write(self._p.stderr.read())
-        os.chdir(self.cwd)
-        shutil.rmtree(self.wdir)
+        self._p.terminate()
+        time.sleep(.2)
+        try:
+            sys.stdout.write(self._p.stdout.read())
+            sys.stderr.write(self._p.stderr.read())
+            os.chdir(self.cwd)
+            shutil.rmtree(self.wdir)
+        finally:
+            os.kill(self._p.pid, 9)
