@@ -50,11 +50,11 @@ class NginxServer(object):
                 options[key] = val
 
         # early rendering so we can stop on error
-        config = Template(_TMPL).render(**options)
+        self.conf_data = Template(_TMPL).render(**options)
         self.wdir = tempfile.mkdtemp()
         self.conf = os.path.join(self.wdir, 'nginx.conf')
         with open(self.conf, 'w') as f:
-            f.write(config)
+            f.write(self.conf_data)
 
         self.root_url = 'http://localhost:%s/' % options['port']
         self.cmd = '%s -c %s' % (options['nginx'], self.conf)
