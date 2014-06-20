@@ -82,7 +82,10 @@ class NginxServer(object):
             self.stop()
             sys.stdout.write(self._p.stdout.read())
             sys.stderr.write(self._p.stderr.read())
-            raise IOError('Failed to start Nginx')
+            if resp is None:
+                raise IOError('Failed to start Nginx')
+            else:
+                raise IOError('Nginx root sent back %s' % resp)
 
     def stop(self):
         if self._p is None:
