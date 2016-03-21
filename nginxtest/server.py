@@ -5,6 +5,7 @@ import subprocess
 import shlex
 import time
 import sys
+import fcntl
 
 from mako.template import Template
 import requests
@@ -86,8 +87,7 @@ class NginxServer(object):
 
         if resp is None or resp.status_code != 200:
             self.stop()
-            sys.stdout.write(self._p.stdout.read())
-            sys.stderr.write(self._p.stderr.read())
+            self._forward_messages()
             if resp is None:
                 raise IOError('Failed to start Nginx')
             else:
@@ -100,9 +100,13 @@ class NginxServer(object):
         self._p.terminate()
         time.sleep(.2)
         try:
-            sys.stdout.write(self._p.stdout.read())
-            sys.stderr.write(self._p.stderr.read())
+            self._forward_messages()
             os.chdir(self.cwd)
             shutil.rmtree(self.wdir)
         finally:
             os.kill(self._p.pid, 9)
+
+    def _forward_messages(self):
+        sys.stdout.write(self._p.stdout.read())
+        sys.stderr.write(self._p.stderr.read())
+
