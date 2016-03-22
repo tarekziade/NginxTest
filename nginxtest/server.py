@@ -5,7 +5,6 @@ import subprocess
 import shlex
 import time
 import sys
-import fcntl
 
 from mako.template import Template
 import requests
