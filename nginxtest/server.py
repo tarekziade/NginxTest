@@ -25,6 +25,7 @@ http {
   server {
     listen ${port};
     ${server_options}
+    rewrite_log on;
 
     ${locations}
   }
