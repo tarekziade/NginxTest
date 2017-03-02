@@ -24,14 +24,19 @@ http {
   server {
     listen ${port};
     ${server_options}
+    rewrite_log on;
 
+    ${locations}
+  }
+}
+"""
+
+_TMPL_LOCATIONS_LIST = """\
     %for location in locations:
       location ${location['path']} {
         ${location['definition']}
       }
     %endfor
-  }
-}
 """
 
 _DEFAULTS = [('nginx', 'nginx'),
@@ -49,6 +54,8 @@ class NginxServer(object):
             if key not in options:
                 options[key] = val
 
+        if type(options['locations']) is list:
+            options['locations'] = Template(_TMPL_LOCATIONS_LIST).render(locations=options['locations'])
         # early rendering so we can stop on error
         self.conf_data = Template(_TMPL).render(**options)
         self.wdir = tempfile.mkdtemp()
@@ -80,8 +87,7 @@ class NginxServer(object):
 
         if resp is None or resp.status_code != 200:
             self.stop()
-            sys.stdout.write(self._p.stdout.read())
-            sys.stderr.write(self._p.stderr.read())
+            self._forward_messages()
             if resp is None:
                 raise IOError('Failed to start Nginx')
             else:
@@ -94,9 +100,13 @@ class NginxServer(object):
         self._p.terminate()
         time.sleep(.2)
         try:
-            sys.stdout.write(self._p.stdout.read())
-            sys.stderr.write(self._p.stderr.read())
+            self._forward_messages()
             os.chdir(self.cwd)
             shutil.rmtree(self.wdir)
         finally:
             os.kill(self._p.pid, 9)
+
+    def _forward_messages(self):
+        sys.stdout.write(self._p.stdout.read())
+        sys.stderr.write(self._p.stderr.read())
+
